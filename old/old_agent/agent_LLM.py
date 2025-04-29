@@ -1,4 +1,3 @@
-import data
 import time
 import numpy as np
 import torch
@@ -20,7 +19,7 @@ def call_assistant_model(query):
         model="qwen2.5-coder-14b-instruct", 
         messages=[
             {'role': 'system', 'content': 'You are a helpful assistant.'},
-            {'role': 'user', 'content': f'{query}是不是车辆端侧模型能直接或间接处理的问题，回答是或否。'}
+            {'role': 'user', 'content': f'{query}是不是车辆端侧模型能处理的问题，回答是或否。'}
         ],
     )
     response = completion.choices[0].message.content.strip()
@@ -64,13 +63,21 @@ class QLearningAgent:
 
 class DeviceModel:
     def generate(self, query):
+        start_time = time.time()
         result = f"Device model result for {query}"
+        end_time = time.time()
+        response_time = end_time - start_time
+        print(f"Device model response time for '{query}': {response_time:.4f} seconds")
         return result
 
 class CloudModel:
     def generate(self, query):
+        start_time = time.time()
         time.sleep(0.1)
         result = f"Cloud model result for {query}"
+        end_time = time.time()
+        response_time = end_time - start_time
+        print(f"Cloud model response time for '{query}': {response_time:.4f} seconds")
         return result
 
 class DeviceCloudAgent:
@@ -132,17 +139,33 @@ class DeviceCloudAgent:
         assistant_response = call_assistant_model(query)
         
         if assistant_response:
+            start_time = time.time()
             result = self.device_model.generate(query)
+            end_time = time.time()
+            response_time = end_time - start_time
+            print(f"Device model response time for '{query}': {response_time:.4f} seconds")
         elif not assistant_response:
+            start_time = time.time()
             result = self.cloud_model.generate(query)
+            end_time = time.time()
+            response_time = end_time - start_time
+            print(f"Cloud model response time for '{query}': {response_time:.4f} seconds")
         else:
             state = self.query_to_state(query)
             state_str = str(state)
             action = self.q_agent.choose_action(state_str)
             if action == 'device':
+                start_time = time.time()
                 result = self.device_model.generate(query)
+                end_time = time.time()
+                response_time = end_time - start_time
+                print(f"Device model response time for '{query}': {response_time:.4f} seconds")
             else:
+                start_time = time.time()
                 result = self.cloud_model.generate(query)
+                end_time = time.time()
+                response_time = end_time - start_time
+                print(f"Cloud model response time for '{query}': {response_time:.4f} seconds")
         
         return result
 
